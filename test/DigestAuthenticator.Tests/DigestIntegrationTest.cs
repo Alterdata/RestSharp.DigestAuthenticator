@@ -1,4 +1,5 @@
-﻿using System.Net;
+﻿using System;
+using System.Net;
 using System.Threading.Tasks;
 using FluentAssertions;
 using Microsoft.Extensions.Logging;
@@ -36,5 +37,25 @@ public class DigestIntegrationTest : IClassFixture<DigestServerStub>
 
         response.StatusCode.Should().Be(HttpStatusCode.OK);
         loggerMock.ReceivedWithAnyArgs().LogDebug("NONONO");
+    }
+
+    [Fact]
+    public async Task Given_ADigestAuthEndpoint_When_ITryToGetInfoWithProxy_Then_TheAuthMustBeResolved()
+    {
+        var loggerMock = Substitute.For<ILogger>();
+        loggerMock.BeginScope("DigestServerStub");
+
+        var request = new RestRequest("values");
+        request.AddHeader("Content-Type", "application/json");
+
+        var proxy = Substitute.For<IWebProxy>();
+
+        var client = _fixture.CreateClientWithProxy(loggerMock, proxy);
+        var response = await client.ExecuteAsync(request);
+
+        response.StatusCode.Should().Be(HttpStatusCode.OK);
+        loggerMock.ReceivedWithAnyArgs().LogDebug("NONONO");
+
+        proxy.ReceivedWithAnyArgs().GetProxy(Arg.Any<Uri>());
     }
 }

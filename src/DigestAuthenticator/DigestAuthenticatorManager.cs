@@ -19,12 +19,9 @@ internal class DigestAuthenticatorManager
     private static readonly Version _assemblyVersion;
 
     private readonly Uri _host;
-
-    private readonly string _password;
-
-    private readonly int _timeout;
     private readonly ILogger _logger;
-
+    private readonly string _password;
+    private readonly int _timeout;
     private readonly string _username;
 
     /// <summary>
@@ -89,11 +86,28 @@ internal class DigestAuthenticatorManager
     /// </summary>
     /// <param name="path">The request path.</param>
     /// <param name="method">The request method.</param>
-    /// <param name="proxy">The request proxy.</param>
+    /// <param name="buildOptions">The options.</param>
+    public Task GetDigestAuthHeader(
+        string path,
+        Method method,
+        Action<RestClientOptions>? buildOptions = null)
+    {
+        var options = new RestClientOptions();
+        buildOptions?.Invoke(options);
+
+        return GetDigestAuthHeader(path, method, options);
+    }
+
+    /// <summary>
+    ///     Gets the digest auth header.
+    /// </summary>
+    /// <param name="path">The request path.</param>
+    /// <param name="method">The request method.</param>
+    /// <param name="options">The RestClientOptions used to configure the RestClient.</param>
     public async Task GetDigestAuthHeader(
         string path,
         Method method,
-        IWebProxy? proxy = default)
+        RestClientOptions options)
     {
         _logger.LogDebug("Initiating GetDigestAuthHeader");
         var uri = new Uri(_host, path);
@@ -103,13 +117,24 @@ internal class DigestAuthenticatorManager
         request.AddOrUpdateHeader("User-Agent", $"RestSharp.Authenticators.Digest/{_assemblyVersion}");
         request.AddOrUpdateHeader("Accept-Encoding", "gzip, deflate, br");
         request.Timeout = _timeout;
-        using var client = new RestClient(new RestClientOptions()
-        {
-            Proxy = proxy
-        });
+        using var client = new RestClient(options);
         var response = await client.ExecuteAsync(request).ConfigureAwait(false);
         GetDigestDataFromFailResponse(response);
         _logger.LogDebug("GetDigestAuthHeader completed");
+    }
+
+    /// <summary>
+    ///     Gets the digest auth header.
+    /// </summary>
+    /// <param name="path">The request path.</param>
+    /// <param name="method">The request method.</param>
+    /// <param name="proxy">The request proxy.</param>
+    public Task GetDigestAuthHeader(
+        string path,
+        Method method,
+        IWebProxy proxy)
+    {
+        return GetDigestAuthHeader(path, method, options => options.Proxy = proxy);
     }
 
     /// <summary>

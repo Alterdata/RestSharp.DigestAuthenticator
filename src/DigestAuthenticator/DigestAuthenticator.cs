@@ -11,11 +11,10 @@ namespace RestSharp.Authenticators.Digest;
 public class DigestAuthenticator : IAuthenticator
 {
     private const int DEFAULT_TIMEOUT = 100000;
-    private readonly string _password;
     private readonly ILogger _logger;
-
-    private readonly string _username;
+    private readonly string _password;
     private readonly int _timeout;
+    private readonly string _username;
 
     /// <summary>
     ///     Creates a new instance of <see cref="DigestAuthenticator" /> class.
@@ -35,7 +34,7 @@ public class DigestAuthenticator : IAuthenticator
         {
             throw new ArgumentException("Value cannot be null or whitespace.", nameof(password));
         }
-        
+
         if (timeout <= 0)
         {
             throw new ArgumentException("Value cannot be less than or equal to zero.", nameof(timeout));
@@ -53,7 +52,7 @@ public class DigestAuthenticator : IAuthenticator
         _logger.LogDebug("Initiate Digest authentication");
         var uri = client.BuildUri(request);
         var manager = new DigestAuthenticatorManager(client.BuildUri(new RestRequest()), _username, _password, _timeout, _logger);
-        await manager.GetDigestAuthHeader(uri.PathAndQuery, request.Method,client.Options.Proxy).ConfigureAwait(false);
+        await manager.GetDigestAuthHeader(uri.PathAndQuery, request.Method, client.Options.Proxy).ConfigureAwait(false);
         var digestHeader = manager.GetDigestHeader(uri.PathAndQuery, request.Method);
         request.AddOrUpdateHeader("Connection", "Keep-Alive");
         request.AddOrUpdateHeader(KnownHeaders.Authorization, digestHeader);

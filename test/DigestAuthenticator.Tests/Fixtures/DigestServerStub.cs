@@ -41,6 +41,17 @@ public class DigestServerStub : IAsyncDisposable
         return new RestClient(restOptions);
     }
 
+    public IRestClient CreateClientWithProxy(ILogger logger, IWebProxy proxy)
+    {
+        var restOptions = new RestClientOptions($"http://localhost:{PORT}")
+        {
+            Authenticator = new DigestAuthenticator(USERNAME, PASSWORD, logger: logger),
+            Proxy = proxy
+        };
+
+        return new RestClient(restOptions);
+    }
+
     public async ValueTask DisposeAsync()
     {
         GC.SuppressFinalize(this);
